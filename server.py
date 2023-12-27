@@ -71,13 +71,14 @@ def run(cs, state):
     print(f"{args=}")
     print(f"{instr=}")
 
-    res = ""
+    res = "200 OK"
 
     if instr == "LIST":
         # TODO: Specify directory or file for the client
         file_list = os.listdir(args[1])
         print(f"{file_list=}")
 
+        res = ""
         for f in file_list:
             res += f + "  "
     elif instr == "CWD":
