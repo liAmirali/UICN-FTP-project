@@ -65,12 +65,8 @@ def run(cs, state):
     print("IN CMD:", input_cmd)
 
     # Parsing user input
-    try:
-        args = parse_cmd(input_cmd)
-        instr = args[0]
-    except Exception as exp:
-        cs.sendall(exp)
-        return
+    args = parse_cmd(input_cmd)
+    instr = args[0]
 
     print(f"{args=}")
     print(f"{instr=}")
@@ -87,12 +83,11 @@ def run(cs, state):
     elif instr == "CWD":
         # TODO: Specify directory or file for the client
         if not check_valid_path(args[1]):
-            cs.sendall("422 Invalid path")
-            return
+            return "422 Invalid path"
         state.cd(args[1])
+        os.chdir(args[1])
 
-    cs.sendall(bytes(res).encode())
-
+    return res
 
 def main():
     ftp_state = State()
@@ -106,11 +101,13 @@ def main():
 
     client_socket, client_address = ctrl_s.accept()
 
-    try:
-        while True:
-            run(client_socket, ftp_state)
-    except Exception as exp:
-        print("ERR :((", exp)
+    while True:
+        try:
+            res = run(client_socket, ftp_state)
+            client_socket.sendall(bytes(res, encoding ="utf-8"))
+        except Exception as exp:
+            print("ERR :((", exp)
+            client_socket.sendall(bytes(str(exp), encoding ="utf-8"))
 
 
 if __name__ == "__main__":
