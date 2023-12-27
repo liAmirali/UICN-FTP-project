@@ -87,6 +87,12 @@ def run(cs, state):
             return "422 Invalid path"
         state.cd(args[1])
         os.chdir(args[1])
+    elif instr == "RETR":
+        if not os.path.isfile(args[1]):
+            return "422 Not a file"
+        file = open(args[1], "r", encoding="utf-8")
+        res = file.read()
+        print("file data:", res)
 
     return res
 
