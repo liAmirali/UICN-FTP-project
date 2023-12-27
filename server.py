@@ -3,7 +3,7 @@ import os
 
 
 # TODO: Create config file
-INTERFACE_HOST = "localhost"
+INTERFACE_HOST = "127.0.0.1"
 INTERFACE_CTRL_PORT = 2021
 INTERFACE_DATA_PORT = 2020
 
@@ -31,6 +31,15 @@ class State:
 
     def cd(self, dir):
         self.server_dir = dir
+
+
+def send_file(file):
+    file_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    file_conn.bind((INTERFACE_HOST, INTERFACE_DATA_PORT))
+    file_conn.listen(1)
+
+    response_message = f"227 Entering Passive Mode ({','.join(INTERFACE_HOST.split('.'))},{
+        INTERFACE_DATA_PORT >> 8},{INTERFACE_DATA_PORT & 255})."
 
 
 def check_valid_path(path):
@@ -96,6 +105,7 @@ def run(cs, state):
 
     return res
 
+
 def main():
     ftp_state = State()
 
@@ -111,10 +121,10 @@ def main():
     while True:
         try:
             res = run(client_socket, ftp_state)
-            client_socket.sendall(bytes(res, encoding ="utf-8"))
+            client_socket.sendall(bytes(res, encoding="utf-8"))
         except Exception as exp:
             print("ERR :((", exp)
-            client_socket.sendall(bytes(str(exp), encoding ="utf-8"))
+            client_socket.sendall(bytes(str(exp), encoding="utf-8"))
 
 
 if __name__ == "__main__":
