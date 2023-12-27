@@ -3,13 +3,15 @@ import socket
 def main():
     client_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    server_host, server_port = input("Enter the server post and host (example: 127.0.0.1:20): ").split(":")
+    # server_host, server_port = input("Enter the server post and host (example: 127.0.0.1:20): ").split(":")
+    server_host, server_port = ("127.0.0.1", 2021)
+
     server_port = int(server_port)
 
     try:
         client_s.connect((server_host, server_port))
     except Exception as exp:
-        print("ERR: Couldn't connect to the server.")
+        print(f"ERR: Couldn't connect to the server. {exp}")
         return
         
 
