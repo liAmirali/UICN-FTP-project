@@ -1,9 +1,10 @@
 import socket
 import re
+import threading
 
 
 DUMMY_HOST = "127.0.0.1"
-DUMMY_CTRL_PORT = 2021
+DUMMY_CTRL_PORT = 6921
 INTERFACE_DATA_PORT = 3020
 
 VALID_CMDS = {
@@ -20,6 +21,7 @@ VALID_CMDS = {
     "CDUP": {"argc": 1},
     "QUIT": {"argc": 1}
 }
+
 
 def check_path_format(path):
     # Regular expression for Unix-like paths (absolute or relative)
@@ -73,12 +75,19 @@ def parse_cmd(cmd):
     raise Exception("422 Invalid command")
 
 
-def recv_file(data_conn):
+def recv_file(data_conn: socket.socket):
+    print("---BEGIN RECV---")
+
     file_name = data_conn.recv(1024).decode("utf-8")
+    print(f"{file_name=} RECVED")
+
     file_data = data_conn.recv(1024 * 1024).decode("utf-8")
+    print(f"{file_data=} RECVED")
 
     with open(file_name, "w") as file:
         file.write(file_data)
+    
+    print("WRITE DONE")
 
 
 def extract_passive_res(response):
@@ -101,20 +110,27 @@ def extract_passive_res(response):
 
     return ip_address, port
 
+
 def run(client_s: socket.socket):
     cmd = input("Enter your command: ")
 
     args = parse_cmd(cmd)
 
-    client_s.send(bytes(cmd, encoding='utf-8'))
-
     if args[0] == "RETR" or args[0] == "STOR":
         data_conn = initiate_passive_mode(client_s)
-        
+
+        client_s.send(bytes(cmd, encoding='utf-8'))
+
         if args[0] == "RETR":
-            recv_file(data_conn)
+            print("IN RETR if")
+
+            recv_file_thread = threading.Thread(target=recv_file, args=(data_conn,))
+            recv_file_thread.start()
+            # recv_file(data_conn)
         elif args[0] == "STOR":
             pass
+    else:
+        client_s.send(bytes(cmd, encoding='utf-8'))
 
     reply = client_s.recv(1024 * 1024).decode()
 

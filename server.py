@@ -1,15 +1,17 @@
 import socket
 import os
+import threading
 
 
 # TODO: Create config file
 INTERFACE_HOST = "127.0.0.1"
-INTERFACE_CTRL_PORT = 2021
-INTERFACE_DATA_PORT = 2020
+INTERFACE_CTRL_PORT = 6921
+INTERFACE_DATA_PORT = 6920
 
 SERVER_ROOT = "/"
 
 VALID_CMDS = {
+    "PASV": {"argc": 1},
     "USER": {"argc": 2},
     "PASS": {"argc": 2},
     "LIST": {"argc": 2},
@@ -24,10 +26,11 @@ VALID_CMDS = {
 }
 
 
-class State:
+class FTPState:
     def __init__(self):
         self.server_dir: str = SERVER_ROOT
         self.user: str | None = None
+        self.data_conn: socket.socket | None = None
 
     def cd(self, dir):
         self.server_dir = dir
@@ -40,7 +43,10 @@ def create_data_conn():
 
     response_message = f"""227 Entering Passive Mode ({','.join(INTERFACE_HOST.split('.'))},{
         INTERFACE_DATA_PORT >> 8},{INTERFACE_DATA_PORT & 255})."""
-    return response_message
+
+    print("response_message:", response_message)
+
+    return response_message, file_conn
 
 
 def check_valid_path(path):
@@ -67,14 +73,19 @@ def parse_cmd(cmd):
 
 
 def send_file(data_conn: socket.socket, file_path: str):
+    print("---BEGIN SEND---")
     with open(file_path, "r", encoding="utf-8") as f:
-        data_conn.sendall(bytes(f.name, encoding="utf-8"))
-        data_conn.sendall(bytes(f.read(), encoding="utf-8"))
+        data_conn.send(bytes(f.name, encoding="utf-8"))
+
+        print("AFTER SEND FILE NAME")
+
+        data_conn.send(bytes(f.read(), encoding="utf-8"))
+        print("AFTER SEND FILE DATA")
 
     data_conn.close()
 
 
-def run(cs, state):
+def run(cs: socket.socket, state: FTPState):
     input_cmd = cs.recv(1024).decode()
     print("IN CMD:", input_cmd)
 
@@ -82,12 +93,7 @@ def run(cs, state):
     args = parse_cmd(input_cmd)
     instr = args[0]
 
-    print(f"{args=}")
-    print(f"{instr=}")
-
     res = "200 OK"
-
-    data_conn: socket.socket | None = None
 
     if instr == "LIST":
         # TODO: Specify directory or file for the client
@@ -104,22 +110,25 @@ def run(cs, state):
         state.cd(args[1])
         os.chdir(args[1])
     elif instr == "PASV":
-        data_conn = create_data_conn()
+        res, data_conn = create_data_conn()
+        state.data_conn = data_conn
     elif instr == "RETR":
         if not os.path.isfile(args[1]):
             return "422 Not a file."
 
-        if not data_conn:
+        if not state.data_conn:
             return "404 A data connection is not initiated."
 
-        send_file(data_conn, args[1])
+        send_file_thread = threading.Thread(
+            target=send_file, args=(state.data_conn, args[1]))
+        send_file_thread.start()
         res = "200 File sent successfully."
 
     return res
 
 
 def main():
-    ftp_state = State()
+    ftp_state = FTPState()
 
     ctrl_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     ctrl_s.bind((INTERFACE_HOST, INTERFACE_CTRL_PORT))
