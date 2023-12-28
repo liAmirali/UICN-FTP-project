@@ -33,24 +33,21 @@ class State:
         self.server_dir = dir
 
 
-def send_file(file):
+def create_data_conn():
     file_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     file_conn.bind((INTERFACE_HOST, INTERFACE_DATA_PORT))
     file_conn.listen(1)
 
-    response_message = f"227 Entering Passive Mode ({','.join(INTERFACE_HOST.split('.'))},{
-        INTERFACE_DATA_PORT >> 8},{INTERFACE_DATA_PORT & 255})."
+    response_message = f"""227 Entering Passive Mode ({','.join(INTERFACE_HOST.split('.'))},{
+        INTERFACE_DATA_PORT >> 8},{INTERFACE_DATA_PORT & 255})."""
+    return response_message
 
 
 def check_valid_path(path):
-    if os.name == 'nt':  # Windows path
-        try:
-            # Checking if the path is valid for Windows
-            return bool(os.path.exists(path))
-        except OSError:
-            return False
-    else:  # Linux or Unix path
-        return os.path.isabs(path)
+    try:
+        return bool(os.path.exists(path))
+    except OSError:
+        return False
 
 
 def parse_cmd(cmd):
@@ -69,6 +66,14 @@ def parse_cmd(cmd):
     raise Exception("422 Invalid command")
 
 
+def send_file(data_conn: socket.socket, file_path: str):
+    with open(file_path, "r", encoding="utf-8") as f:
+        data_conn.sendall(bytes(f.name, encoding="utf-8"))
+        data_conn.sendall(bytes(f.read(), encoding="utf-8"))
+
+    data_conn.close()
+
+
 def run(cs, state):
     input_cmd = cs.recv(1024).decode()
     print("IN CMD:", input_cmd)
@@ -81,6 +86,8 @@ def run(cs, state):
     print(f"{instr=}")
 
     res = "200 OK"
+
+    data_conn: socket.socket | None = None
 
     if instr == "LIST":
         # TODO: Specify directory or file for the client
@@ -96,12 +103,17 @@ def run(cs, state):
             return "422 Invalid path"
         state.cd(args[1])
         os.chdir(args[1])
+    elif instr == "PASV":
+        data_conn = create_data_conn()
     elif instr == "RETR":
         if not os.path.isfile(args[1]):
-            return "422 Not a file"
-        file = open(args[1], "r", encoding="utf-8")
-        res = file.read()
-        print("file data:", res)
+            return "422 Not a file."
+
+        if not data_conn:
+            return "404 A data connection is not initiated."
+
+        send_file(data_conn, args[1])
+        res = "200 File sent successfully."
 
     return res
 
