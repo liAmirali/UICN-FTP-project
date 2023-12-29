@@ -48,16 +48,7 @@ def initiate_passive_mode(ctrl_conn: socket.socket) -> socket.socket:
 
     print(f"SERVER DATA PORT IS {port}, IP: {ip}")
 
-    data_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-    try:
-        data_conn.connect((ip, port))
-    except Exception as exp:
-        msg = f"ERR: Couldn't initiate the data connection. {exp}"
-        data_conn.close()
-        raise Exception(msg)
-
-    return data_conn
+    return ip, port
 
 
 def parse_cmd(cmd):
@@ -75,13 +66,20 @@ def parse_cmd(cmd):
     raise Exception("422 Invalid command")
 
 
-def recv_file(data_conn: socket.socket):
+def recv_file(data_ip: str, data_port: str):
     print("---BEGIN RECV---")
+    data_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    file_name = data_conn.recv(1024).decode("utf-8")
+    try:
+        data_sock.connect((data_ip, data_port))
+    except Exception as exp:
+        print("Couldn't connect to data socket")
+        return
+
+    file_name = data_sock.recv(1024).decode("utf-8")
     print(f"{file_name=} RECVED")
 
-    file_data = data_conn.recv(1024 * 1024).decode("utf-8")
+    file_data = data_sock.recv(1024 * 1024).decode("utf-8")
     print(f"{file_data=} RECVED")
 
     with open(file_name, "w") as file:
@@ -117,14 +115,14 @@ def run(client_s: socket.socket):
     args = parse_cmd(cmd)
 
     if args[0] == "RETR" or args[0] == "STOR":
-        data_conn = initiate_passive_mode(client_s)
+        data_ip, data_port = initiate_passive_mode(client_s)
 
         client_s.send(bytes(cmd, encoding='utf-8'))
 
         if args[0] == "RETR":
             print("IN RETR if")
 
-            recv_file_thread = threading.Thread(target=recv_file, args=(data_conn,))
+            recv_file_thread = threading.Thread(target=recv_file, args=(data_ip, data_port))
             recv_file_thread.start()
             # recv_file(data_conn)
         elif args[0] == "STOR":

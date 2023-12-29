@@ -30,23 +30,23 @@ class FTPState:
     def __init__(self):
         self.server_dir: str = SERVER_ROOT
         self.user: str | None = None
-        self.data_conn: socket.socket | None = None
+        self.data_sock: socket.socket | None = None
 
     def cd(self, dir):
         self.server_dir = dir
 
 
 def create_data_conn():
-    file_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    file_conn.bind((INTERFACE_HOST, INTERFACE_DATA_PORT))
-    file_conn.listen(1)
+    data_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    data_sock.bind((INTERFACE_HOST, INTERFACE_DATA_PORT))
+    data_sock.listen(1)
 
     response_message = f"""227 Entering Passive Mode ({','.join(INTERFACE_HOST.split('.'))},{
         INTERFACE_DATA_PORT >> 8},{INTERFACE_DATA_PORT & 255})."""
 
     print("response_message:", response_message)
 
-    return response_message, file_conn
+    return response_message, data_sock
 
 
 def check_valid_path(path):
@@ -72,10 +72,12 @@ def parse_cmd(cmd):
     raise Exception("422 Invalid command")
 
 
-def send_file(data_conn: socket.socket, file_path: str):
+def send_file(data_sock: socket.socket, file_path: str):
+    data_conn, client_data_addr = data_sock.accept()
+    
     print("---BEGIN SEND---")
     with open(file_path, "r", encoding="utf-8") as f:
-        data_conn.send(bytes(f.name, encoding="utf-8"))
+        data_conn.send(bytes(os.path.basename(file_path), encoding="utf-8"))
 
         print("AFTER SEND FILE NAME")
 
@@ -110,17 +112,17 @@ def run(cs: socket.socket, state: FTPState):
         state.cd(args[1])
         os.chdir(args[1])
     elif instr == "PASV":
-        res, data_conn = create_data_conn()
-        state.data_conn = data_conn
+        res, data_sock = create_data_conn()
+        state.data_sock = data_sock
     elif instr == "RETR":
         if not os.path.isfile(args[1]):
             return "422 Not a file."
 
-        if not state.data_conn:
+        if not state.data_sock:
             return "404 A data connection is not initiated."
 
         send_file_thread = threading.Thread(
-            target=send_file, args=(state.data_conn, args[1]))
+            target=send_file, args=(state.data_sock, args[1]))
         send_file_thread.start()
         res = "200 File sent successfully."
 
