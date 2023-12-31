@@ -30,3 +30,17 @@ def send_file(data_sock: socket.socket, file_path: str):
         print("AFTER SEND FILE DATA")
 
     data_conn.close()
+
+def recv_file(data_sock: socket.socket):
+    data_conn, client_data_addr = data_sock.accept()
+
+    file_name = data_conn.recv(1024).decode("utf-8")
+    print(f"{file_name=} RECVED")
+
+    file_data = data_conn.recv(1024 * 1024).decode("utf-8")
+    print(f"{file_data=} RECVED")
+
+    with open(file_name, "w") as file:
+        file.write(file_data)
+
+

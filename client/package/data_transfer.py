@@ -65,6 +65,8 @@ def send_file(data_ip, data_port, file_path):
         data_sock.send(bytes(file_data, encoding="utf-8"))
         print("AFTER SEND FILE DATA")
 
+    data_sock.close()
+
     
 
 
