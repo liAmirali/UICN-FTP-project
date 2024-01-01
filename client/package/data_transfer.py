@@ -2,6 +2,7 @@ import socket
 import re
 import os
 
+
 def extract_passive_res(response):
     print(response)
     # Sample response from PASV command
@@ -44,8 +45,10 @@ def recv_file(data_ip, data_port):
 
     print("WRITE DONE")
 
+    data_sock.close()
 
-def send_file(data_ip, data_port, file_path):
+
+def send_file(data_ip, data_port, file_path_client, file_path_server):
     data_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     try:
@@ -53,12 +56,12 @@ def send_file(data_ip, data_port, file_path):
     except Exception as exp:
         print("Couldn't connect to data socket")
         return
-    
-    with open(file_path, "r") as f:
-        file_name = os.path.basename(file_path)
+
+    with open(file_path_client, "r") as f:
+        file_addr = file_path_server + '/' + os.path.basename(file_path_client)
         file_data = f.read()
 
-        data_sock.send(bytes(file_name, encoding="utf-8"))
+        data_sock.send(bytes(file_addr, encoding="utf-8"))
 
         print("AFTER SEND FILE NAME")
 
@@ -66,8 +69,6 @@ def send_file(data_ip, data_port, file_path):
         print("AFTER SEND FILE DATA")
 
     data_sock.close()
-
-    
 
 
 def initiate_passive_mode(ctrl_conn: socket.socket):

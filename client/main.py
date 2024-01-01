@@ -2,7 +2,7 @@ import socket
 import threading
 
 from package.constants import *
-from package.data_transfer import initiate_passive_mode, recv_file
+from package.data_transfer import initiate_passive_mode, recv_file, send_file
 from package.utils import parse_cmd
 
 
@@ -23,7 +23,8 @@ def run(client_s: socket.socket):
             recv_file_thread.start()
             # recv_file(data_ip, data_port)
         elif args[0] == "STOR":
-            pass
+            recv_file_thread = threading.Thread(target=send_file, args=(data_ip, data_port, args[1], args[2]))
+            recv_file_thread.start()
     else:
         client_s.send(bytes(cmd, encoding='utf-8'))
 

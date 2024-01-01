@@ -31,16 +31,20 @@ def send_file(data_sock: socket.socket, file_path: str):
 
     data_conn.close()
 
+
 def recv_file(data_sock: socket.socket):
+    print("IN recv_file")
     data_conn, client_data_addr = data_sock.accept()
 
-    file_name = data_conn.recv(1024).decode("utf-8")
-    print(f"{file_name=} RECVED")
+    print("CONNECTION ACCEPTED")
+
+    file_addr = data_conn.recv(1024).decode("utf-8")
+    print(f"{file_addr=} RECVED")
 
     file_data = data_conn.recv(1024 * 1024).decode("utf-8")
     print(f"{file_data=} RECVED")
 
-    with open(file_name, "w") as file:
+    with open(file_addr, "w") as file:
         file.write(file_data)
 
-
+    data_conn.close()

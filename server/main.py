@@ -4,7 +4,7 @@ import threading
 
 from package.constants import *
 from package.utils import parse_cmd, check_valid_path
-from package.data_transfer import create_data_conn, send_file
+from package.data_transfer import create_data_conn, send_file, recv_file
 from package.FTPState import FTPState
 
 ftp_state = FTPState()
@@ -46,7 +46,33 @@ def run(cs: socket.socket, state: FTPState):
 
         send_file_thread = threading.Thread(
             target=send_file, args=(state.data_sock, args[1]))
+
         send_file_thread.start()
+        send_file_thread.join()
+
+        if state.data_sock:
+            state.data_sock.close()
+            state.data_sock = None
+        res = "200 File sent successfully."
+    elif instr == "STOR":
+        print("IN STOR IF")
+        if not os.path.exists(args[2]):
+            return "422 Path not found on server."
+
+        if not state.data_sock:
+            return "404 A data connection is not initiated."
+
+        print("TO EXE THREAD")
+
+        recv_file_thread = threading.Thread(
+            target=recv_file, args=(state.data_sock,))
+
+        recv_file_thread.start()
+        recv_file_thread.join()
+
+        if state.data_sock:
+            state.data_sock.close()
+            state.data_sock = None
         res = "200 File sent successfully."
 
     return res
