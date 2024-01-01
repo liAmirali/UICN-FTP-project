@@ -30,10 +30,12 @@ def run(cs: socket.socket, state: FTPState):
             res += f + "  "
     elif instr == "CWD":
         # TODO: Specify directory or file for the client
+        # TODO: Add file size and other meta data (read the doc)
         if not check_valid_path(args[1]):
             return "422 Invalid path"
-        state.cd(args[1])
         os.chdir(args[1])
+    elif instr == "CDUP":
+        os.chdir("..")
     elif instr == "PASV":
         res, data_sock = create_data_conn()
         state.data_sock = data_sock
@@ -74,6 +76,14 @@ def run(cs: socket.socket, state: FTPState):
             state.data_sock.close()
             state.data_sock = None
         res = "200 File sent successfully."
+    elif instr == "DELE":
+        pass
+    elif instr == "MKD":
+        pass
+    elif instr == "RMD":
+        pass
+    elif instr == "PWD":
+        res = os.getcwd()
 
     return res
 

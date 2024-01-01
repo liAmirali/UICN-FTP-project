@@ -13,6 +13,7 @@ VALID_CMDS = {
     "MKD": {"argc": 2},
     "RMD": {"argc": 2},
     "CWD": {"argc": 2},
+    "PWD": {"argc": 1},
     "CDUP": {"argc": 1},
     "QUIT": {"argc": 1}
 }
