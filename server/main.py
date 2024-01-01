@@ -81,7 +81,16 @@ def run(cs: socket.socket, state: FTPState):
     elif instr == "MKD":
         pass
     elif instr == "RMD":
-        pass
+        if not os.path.exists(args[1]):
+            return "404 Directory does not exists."
+
+        if not os.path.isdir(args[1]):
+            return "422 Path is not a directory."
+
+        if os.listdir(args[1]):
+            return "422 Directory not empty."
+
+        os.rmdir(args[1])
     elif instr == "PWD":
         res = os.getcwd()
 
