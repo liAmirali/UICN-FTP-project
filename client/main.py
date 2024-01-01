@@ -60,6 +60,11 @@ def main():
         try:
             reply = run(client_s)
             print(f"REPLY: {reply}")
+
+            if reply == "221 QUITTED":
+                client_s.close()
+                break
+
         except Exception as exp:
             print("ERR :(((((", exp)
 

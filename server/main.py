@@ -98,6 +98,11 @@ def run(cs: socket.socket, state: FTPState):
         os.rmdir(args[1])
     elif instr == "PWD":
         res = os.getcwd()
+    elif instr == "QUIT":
+        if state.data_sock:
+            state.data_sock.close()
+
+        res = "221 QUITTED"
 
     return res
 
@@ -116,6 +121,10 @@ def main():
         try:
             res = run(client_socket, ftp_state)
             client_socket.sendall(bytes(res, encoding="utf-8"))
+
+            if "221 QUITTED":
+                ctrl_s.close()
+                break
         except Exception as exp:
             print("ERR :((", exp)
             client_socket.sendall(bytes(str(exp), encoding="utf-8"))
