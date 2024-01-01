@@ -79,7 +79,8 @@ def run(cs: socket.socket, state: FTPState):
     elif instr == "DELE":
         pass
     elif instr == "MKD":
-        pass
+        os.makedirs(args[1])
+        res = "200 Path created."
     elif instr == "RMD":
         if not os.path.exists(args[1]):
             return "404 Directory does not exists."
