@@ -77,7 +77,11 @@ def run(cs: socket.socket, state: FTPState):
             state.data_sock = None
         res = "200 File sent successfully."
     elif instr == "DELE":
-        pass
+        if not os.path.isfile(args[1]):
+            return "404 File does not exist."
+
+        os.remove(args[1])
+
     elif instr == "MKD":
         os.makedirs(args[1])
         res = "200 Path created."

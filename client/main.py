@@ -19,12 +19,21 @@ def run(client_s: socket.socket):
         if args[0] == "RETR":
             print("IN RETR if")
 
-            recv_file_thread = threading.Thread(target=recv_file, args=(data_ip, data_port))
+            recv_file_thread = threading.Thread(
+                target=recv_file, args=(data_ip, data_port))
             recv_file_thread.start()
             # recv_file(data_ip, data_port)
         elif args[0] == "STOR":
-            recv_file_thread = threading.Thread(target=send_file, args=(data_ip, data_port, args[1], args[2]))
+            recv_file_thread = threading.Thread(
+                target=send_file, args=(data_ip, data_port, args[1], args[2]))
             recv_file_thread.start()
+    elif args[0] == "DELE":
+        confirmationRes = input("Do you really wish to delete? (Y/N) ")
+        if confirmationRes == "Y":
+            client_s.send(bytes(cmd, encoding='utf-8'))
+        else:
+            return "File deletion not confirmed."
+
     else:
         client_s.send(bytes(cmd, encoding='utf-8'))
 
