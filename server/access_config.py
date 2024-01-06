@@ -2,18 +2,18 @@ USERS = [
     {
         "username": "Amirali",
         "password": "1234",
-        "isPrivilaged": True
+        "is_privilaged": True
     },
     {
         "username": "Asal",
         "password": "5678",
-        "isPrivilaged": False
+        "is_privilaged": False
     },
     {
         "username": "Arshia",
         "password": "1010",
-        "isPrivilaged": True
+        "is_privilaged": True
     }
 ]
 
-PRIVATEPATH = ["./data/confidential", "./data/private.txt"]
+PRIVATE_PATHS = ["./data/confidential", "./data/private.txt"]

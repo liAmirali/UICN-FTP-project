@@ -3,7 +3,7 @@ import os
 import threading
 
 from package.constants import *
-from package.utils import parse_cmd, check_valid_path
+from package.utils import parse_cmd, check_valid_path, is_accessible
 from package.data_transfer import create_data_conn, send_file, recv_file
 from package.FTPState import FTPState
 
@@ -17,6 +17,8 @@ def run(cs: socket.socket, state: FTPState):
     # Parsing user input
     args = parse_cmd(input_cmd)
     instr = args[0]
+
+    is_accessible(args, "Asal")
 
     res = "200 OK"
 
@@ -122,7 +124,7 @@ def main():
             res = run(client_socket, ftp_state)
             client_socket.sendall(bytes(res, encoding="utf-8"))
 
-            if "221 QUITTED":
+            if res == "221 QUITTED":
                 ctrl_s.close()
                 break
         except Exception as exp:
