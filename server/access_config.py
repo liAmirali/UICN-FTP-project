@@ -1,3 +1,5 @@
+import os
+
 USERS = [
     {
         "username": "Amirali",
@@ -16,4 +18,7 @@ USERS = [
     }
 ]
 
-PRIVATE_PATHS = ["./data/confidential", "./data/private.txt"]
+PRIVATE_PATHS = [
+    os.path.abspath("./data/confidential"),
+    os.path.abspath("./data/private.txt")
+]
