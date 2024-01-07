@@ -3,6 +3,7 @@ import os
 import threading
 
 from package.constants import *
+from access_config import USERS
 from package.utils import parse_cmd, check_valid_path, is_accessible
 from package.data_transfer import create_data_conn, send_file, recv_file
 from package.FTPState import FTPState
@@ -22,7 +23,26 @@ def run(cs: socket.socket, state: FTPState):
 
     res = "200 OK"
 
-    if instr == "LIST":
+    if instr == "USER":
+        res = "403 User does not exist."
+        for u in USERS:
+            if u["username"] == args[1]:
+                ftp_state.user = args[1]
+                ftp_state.authenticated = False
+                res = "200 User found."
+                break
+    elif instr == "PASS":
+        res = "403 User does not exists"
+        for u in USERS:
+            if u["username"] == ftp_state.user:
+                if u["password"] == args[1]:
+                    res = "200 Authenticated."
+                    ftp_state.authenticated = True
+                    break
+                else:
+                    res = "403 Wrong password."
+
+    elif instr == "LIST":
         # TODO: Specify directory or file for the client
         file_list = os.listdir(args[1])
         print(f"{file_list=}")

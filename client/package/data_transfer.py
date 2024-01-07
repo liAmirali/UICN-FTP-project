@@ -35,10 +35,10 @@ def recv_file(data_ip, data_port):
         return
 
     file_name = data_sock.recv(1024).decode("utf-8")
-    print(f"{file_name=} RECVED")
+    print(f"{file_name=} RECEIVED")
 
     file_data = data_sock.recv(1024 * 1024).decode("utf-8")
-    print(f"{file_data=} RECVED")
+    print(f"{file_data=} RECEIVED")
 
     with open(file_name, "w") as file:
         file.write(file_data)
