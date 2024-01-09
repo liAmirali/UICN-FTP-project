@@ -8,8 +8,6 @@ from package.utils import parse_cmd, check_valid_path, is_accessible
 from package.data_transfer import create_data_conn, send_file, recv_file
 from package.FTPState import FTPState
 
-ftp_state = FTPState()
-
 
 def run(cs: socket.socket, state: FTPState):
     input_cmd = cs.recv(1024).decode()
@@ -27,17 +25,17 @@ def run(cs: socket.socket, state: FTPState):
         res = "403 User does not exist."
         for u in USERS:
             if u["username"] == args[1]:
-                ftp_state.user = args[1]
-                ftp_state.authenticated = False
+                state.user = args[1]
+                state.authenticated = False
                 res = "200 User found."
                 break
     elif instr == "PASS":
         res = "403 User does not exists"
         for u in USERS:
-            if u["username"] == ftp_state.user:
+            if u["username"] == state.user:
                 if u["password"] == args[1]:
                     res = "200 Authenticated."
-                    ftp_state.authenticated = True
+                    state.authenticated = True
                     break
                 else:
                     res = "403 Wrong password."
@@ -129,15 +127,8 @@ def run(cs: socket.socket, state: FTPState):
     return res
 
 
-def main():
-    ctrl_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    ctrl_s.bind((INTERFACE_HOST, INTERFACE_CTRL_PORT))
-    ctrl_s.listen(5)
-
-    print(
-        f"Server is listening on http://{INTERFACE_HOST}:{INTERFACE_CTRL_PORT}")
-
-    client_socket, client_address = ctrl_s.accept()
+def handle_new_client(ctrl_s: socket.socket, client_socket: socket.socket):
+    ftp_state = FTPState()
 
     while True:
         try:
@@ -150,6 +141,23 @@ def main():
         except Exception as exp:
             print("ERR :((", exp)
             client_socket.sendall(bytes(str(exp), encoding="utf-8"))
+
+
+def main():
+    ctrl_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    ctrl_s.bind((INTERFACE_HOST, INTERFACE_CTRL_PORT))
+    ctrl_s.listen(5)
+
+    print(
+        f"Server is listening on http://{INTERFACE_HOST}:{INTERFACE_CTRL_PORT}")
+
+    while True:
+        client_socket, client_address = ctrl_s.accept()
+
+        print(f"A new client is connected. Address={client_address}")
+
+        new_client_thread = threading.Thread(target=handle_new_client, args=(ctrl_s, client_socket))
+        new_client_thread.start()
 
 
 if __name__ == "__main__":
