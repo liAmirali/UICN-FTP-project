@@ -17,7 +17,6 @@ def parse_cmd(cmd):
 
     if instr in VALID_CMDS:
         argc = VALID_CMDS[instr]["argc"]
-        print("ARGC: ", argc)
 
         if argc == len(args):
             return args

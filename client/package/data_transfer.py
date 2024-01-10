@@ -4,7 +4,6 @@ import os
 
 
 def extract_passive_res(response):
-    print(response)
     # Sample response from PASV command
     # response = "227 Entering Passive Mode (127,0,0,1,12,34)."
 
@@ -18,10 +17,13 @@ def extract_passive_res(response):
         port = (int(match.group('p1')) << 8) + int(match.group('p2'))
         print(f"IP Address: {ip_address}")
         print(f"Port: {port}")
+
+        return ip_address, port
     else:
         print("No match found.")
 
-    return ip_address, port
+        return None, None
+
 
 
 def recv_file(data_ip, data_port):
@@ -43,7 +45,7 @@ def recv_file(data_ip, data_port):
     with open(file_name, "w") as file:
         file.write(file_data)
 
-    print("WRITE DONE")
+    print("---WRITE DONE---")
 
     data_sock.close()
 
@@ -63,10 +65,7 @@ def send_file(data_ip, data_port, file_path_client, file_path_server):
 
         data_sock.send(bytes(file_addr, encoding="utf-8"))
 
-        print("AFTER SEND FILE NAME")
-
         data_sock.send(bytes(file_data, encoding="utf-8"))
-        print("AFTER SEND FILE DATA")
 
     data_sock.close()
 
@@ -74,8 +73,9 @@ def send_file(data_ip, data_port, file_path_client, file_path_server):
 def initiate_passive_mode(ctrl_conn: socket.socket):
     ctrl_conn.send(bytes("PASV", encoding="utf-8"))
     res = ctrl_conn.recv(1024).decode()
+    print("PASV command Response:", res)
     ip, port = extract_passive_res(res)
 
-    print(f"SERVER DATA PORT IS {port}, IP: {ip}")
+    print(f"Server data port is {port}, and  IP is {ip}")
 
     return ip, port

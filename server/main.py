@@ -16,7 +16,7 @@ def run(cs: socket.socket, state: FTPState):
     if input_cmd == "":
         return
 
-    print("IN CMD:", input_cmd)
+    print("Incoming Command:", input_cmd)
 
     # Parsing user input
     args = parse_cmd(input_cmd)
@@ -26,6 +26,7 @@ def run(cs: socket.socket, state: FTPState):
         is_accessible(args, state.user)
 
     res = "200 OK"
+    os.chdir(state.absdir)
 
     if instr == "USER":
         res = "403 User does not exist."
@@ -86,14 +87,11 @@ def run(cs: socket.socket, state: FTPState):
             state.data_sock = None
         res = "200 File sent successfully."
     elif instr == "STOR":
-        print("IN STOR IF")
         if not os.path.exists(args[2]):
             return "422 Path not found on server."
 
         if not state.data_sock:
             return "404 A data connection is not initiated."
-
-        print("TO EXE THREAD")
 
         recv_file_thread = threading.Thread(
             target=recv_file, args=(state.data_sock,))
@@ -141,12 +139,9 @@ def handle_new_client(ctrl_s: socket.socket, client_socket: socket.socket):
 
     while True:
         try:
-            server_path = os.getcwd()
-            print("DIR:", ftp_state.absdir)
+            old_dir = os.getcwd()
 
-            os.chdir(ftp_state.absdir)
             res = run(client_socket, ftp_state)
-            os.chdir(server_path)
 
             client_socket.sendall(bytes(res, encoding="utf-8"))
 
@@ -154,8 +149,11 @@ def handle_new_client(ctrl_s: socket.socket, client_socket: socket.socket):
                 ctrl_s.close()
                 break
         except Exception as exp:
-            print("ERR:", exp)
+            print("Error:", exp)
             client_socket.sendall(bytes(str(exp), encoding="utf-8"))
+        finally:
+            os.chdir(old_dir)
+
 
 
 def main():

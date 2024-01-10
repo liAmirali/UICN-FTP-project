@@ -17,8 +17,6 @@ def run(client_s: socket.socket):
         client_s.send(bytes(cmd, encoding='utf-8'))
 
         if args[0] == "RETR":
-            print("IN RETR if")
-
             recv_file_thread = threading.Thread(
                 target=recv_file, args=(data_ip, data_port))
             recv_file_thread.start()
@@ -75,7 +73,7 @@ def main():
     try:
         client_s.connect((server_host, server_port))
     except Exception as exp:
-        print(f"ERR: Couldn't connect to the server. {exp}")
+        print(f"Error: Couldn't connect to the server. {exp}")
         return
 
     try:
@@ -83,20 +81,20 @@ def main():
         if not authenticated:
             return
     except Exception as exp:
-        print("ERR", exp)
+        print("Error:", exp)
         return
 
     while True:
         try:
             reply = run(client_s)
-            print(f"REPLY: {reply}")
+            print("Reply:", reply)
 
             if reply == "221 QUITTED":
                 client_s.close()
                 break
 
         except Exception as exp:
-            print("ERR :(((((", exp)
+            print("Error:", exp)
 
 
 if __name__ == "__main__":
