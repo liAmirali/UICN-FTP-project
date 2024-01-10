@@ -11,13 +11,19 @@ from package.FTPState import FTPState
 
 def run(cs: socket.socket, state: FTPState):
     input_cmd = cs.recv(1024).decode()
+    input_cmd.strip()
+
+    if input_cmd == "":
+        return
+
     print("IN CMD:", input_cmd)
 
     # Parsing user input
     args = parse_cmd(input_cmd)
     instr = args[0]
 
-    is_accessible(args, "Asal")
+    if state.authenticated and state.user:
+        is_accessible(args, state.user)
 
     res = "200 OK"
 
@@ -39,6 +45,9 @@ def run(cs: socket.socket, state: FTPState):
                     break
                 else:
                     res = "403 Wrong password."
+        if res.split(" ")[0] != "200":
+            state.user = None
+            state.authenticated = False
 
     elif instr == "LIST":
         # TODO: Specify directory or file for the client
@@ -145,7 +154,7 @@ def handle_new_client(ctrl_s: socket.socket, client_socket: socket.socket):
                 ctrl_s.close()
                 break
         except Exception as exp:
-            print("ERR :((", exp)
+            print("ERR:", exp)
             client_socket.sendall(bytes(str(exp), encoding="utf-8"))
 
 

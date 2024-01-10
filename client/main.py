@@ -42,6 +42,28 @@ def run(client_s: socket.socket):
     return reply
 
 
+def authenticate_user(client_s: socket.socket):
+    username = input("Enter your username: ")
+    cmd = f"USER {username}"
+    client_s.send(bytes(cmd, encoding='utf-8'))
+    reply = client_s.recv(1024).decode()
+
+    print("Reply:", reply)
+    if reply.split(" ")[0] != "200":
+        return False
+
+    password = input("Enter your password: ")
+    cmd = f"PASS {password}"
+    client_s.send(bytes(cmd, encoding='utf-8'))
+    reply = client_s.recv(1024).decode()
+
+    print("Reply:", reply)
+    if reply.split(" ")[0] != "200":
+        return False
+
+    return True
+
+
 def main():
     client_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -54,6 +76,14 @@ def main():
         client_s.connect((server_host, server_port))
     except Exception as exp:
         print(f"ERR: Couldn't connect to the server. {exp}")
+        return
+
+    try:
+        authenticated = authenticate_user(client_s)
+        if not authenticated:
+            return
+    except Exception as exp:
+        print("ERR", exp)
         return
 
     while True:
