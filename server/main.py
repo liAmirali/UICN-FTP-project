@@ -53,9 +53,9 @@ def run(cs: socket.socket, state: FTPState):
         # TODO: Add file size and other meta data (read the doc)
         if not check_valid_path(args[1]):
             return "422 Invalid path"
-        os.chdir(args[1])
+        state.cd(args[1])
     elif instr == "CDUP":
-        os.chdir("..")
+        state.cd("..")
     elif instr == "PASV":
         res, data_sock = create_data_conn()
         state.data_sock = data_sock
@@ -117,7 +117,7 @@ def run(cs: socket.socket, state: FTPState):
 
         os.rmdir(args[1])
     elif instr == "PWD":
-        res = os.getcwd()
+        res = state.absdir
     elif instr == "QUIT":
         if state.data_sock:
             state.data_sock.close()
@@ -132,7 +132,13 @@ def handle_new_client(ctrl_s: socket.socket, client_socket: socket.socket):
 
     while True:
         try:
+            server_path = os.getcwd()
+            print("DIR:", ftp_state.absdir)
+
+            os.chdir(ftp_state.absdir)
             res = run(client_socket, ftp_state)
+            os.chdir(server_path)
+
             client_socket.sendall(bytes(res, encoding="utf-8"))
 
             if res == "221 QUITTED":
@@ -156,7 +162,8 @@ def main():
 
         print(f"A new client is connected. Address={client_address}")
 
-        new_client_thread = threading.Thread(target=handle_new_client, args=(ctrl_s, client_socket))
+        new_client_thread = threading.Thread(
+            target=handle_new_client, args=(ctrl_s, client_socket))
         new_client_thread.start()
 
 
