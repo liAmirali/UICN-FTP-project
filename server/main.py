@@ -51,7 +51,6 @@ def run(cs: socket.socket, state: FTPState):
             state.authenticated = False
 
     elif instr == "LIST":
-        # TODO: Specify directory or file for the client
         file_list = os.listdir(args[1])
         print(f"{file_list=}")
 
@@ -59,8 +58,6 @@ def run(cs: socket.socket, state: FTPState):
         for f in file_list:
             res += f + "  "
     elif instr == "CWD":
-        # TODO: Specify directory or file for the client
-        # TODO: Add file size and other meta data (read the doc)
         if not check_valid_path(args[1]):
             return "422 Invalid path"
         state.cd(args[1])
