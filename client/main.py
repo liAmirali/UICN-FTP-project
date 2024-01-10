@@ -20,7 +20,7 @@ def run(client_s: socket.socket):
             recv_file_thread = threading.Thread(
                 target=recv_file, args=(data_ip, data_port))
             recv_file_thread.start()
-            # recv_file(data_ip, data_port)
+
         elif args[0] == "STOR":
             recv_file_thread = threading.Thread(
                 target=send_file, args=(data_ip, data_port, args[1], args[2]))
@@ -79,9 +79,11 @@ def main():
     try:
         authenticated = authenticate_user(client_s)
         if not authenticated:
+            client_s.close()
             return
     except Exception as exp:
         print("Error:", exp)
+        client_s.close()
         return
 
     while True:
