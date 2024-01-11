@@ -22,11 +22,12 @@ def run(cs: socket.socket, state: FTPState):
     args = parse_cmd(input_cmd)
     instr = args[0]
 
+    os.chdir(state.absdir)
+
     if state.authenticated and state.user:
         is_accessible(args, state.user)
 
     res = "200 OK"
-    os.chdir(state.absdir)
 
     if instr == "USER":
         res = "403 User does not exist."

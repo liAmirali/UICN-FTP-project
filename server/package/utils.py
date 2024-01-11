@@ -46,7 +46,7 @@ def path_satisfy(server_path, client_path):
 
 def is_accessible(args, user):
     for u in USERS:
-        if u["username"] == user and u["is_privilaged"]:
+        if u["username"] == user and u["is_privileged"]:
             return
 
     for server_arg in VALID_CMDS[args[0]]["srv_args"]:
