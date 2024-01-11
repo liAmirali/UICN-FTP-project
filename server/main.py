@@ -4,7 +4,7 @@ import threading
 
 from package.constants import *
 from access_config import USERS
-from package.utils import parse_cmd, check_valid_path, is_accessible
+from package.utils import parse_cmd, check_valid_path, is_accessible, update_history, get_history
 from package.data_transfer import create_data_conn, send_file, recv_file
 from package.FTPState import FTPState
 
@@ -17,6 +17,8 @@ def run(cs: socket.socket, state: FTPState):
         return
 
     print("Incoming Command:", input_cmd)
+
+    update_history(command=input_cmd, user=state.user)
 
     # Parsing user input
     args = parse_cmd(input_cmd)
@@ -128,6 +130,12 @@ def run(cs: socket.socket, state: FTPState):
             state.data_sock.close()
 
         res = "221 QUITTED"
+    elif instr == "REPORT":
+        if state.user == "admin":
+            history = get_history()
+            res = history
+        else:
+            res = "403 Forbidden."
 
     return res
 
@@ -151,7 +159,6 @@ def handle_new_client(ctrl_s: socket.socket, client_socket: socket.socket):
             client_socket.sendall(bytes(str(exp), encoding="utf-8"))
         finally:
             os.chdir(old_dir)
-
 
 
 def main():

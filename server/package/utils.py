@@ -2,6 +2,7 @@ import os
 
 from .constants import VALID_CMDS
 from access_config import USERS, PRIVATE_PATHS
+from config import HISTORY_FILE_ADDR
 
 
 def check_valid_path(path):
@@ -53,3 +54,15 @@ def is_accessible(args, user):
         for path in PRIVATE_PATHS:
             if path_satisfy(path, args[server_arg]):
                 raise Exception("You cannot access this path.")
+
+
+def update_history(command: str, user: str):
+    with open(HISTORY_FILE_ADDR, "a") as f:
+        f.write(f"{user}: {command}\n")
+
+
+def get_history():
+    with open(HISTORY_FILE_ADDR, "r") as f:
+        data = f.read()
+    
+    return data

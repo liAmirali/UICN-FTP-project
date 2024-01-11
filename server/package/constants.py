@@ -15,5 +15,6 @@ VALID_CMDS = {
     "CWD": {"argc": 2, "srv_args": [1]},
     "PWD": {"argc": 1, "srv_args": []},
     "CDUP": {"argc": 1, "srv_args": []},
-    "QUIT": {"argc": 1, "srv_args": []}
+    "QUIT": {"argc": 1, "srv_args": []},
+    "REPORT": {"argc": 1, "srv_args": []}
 }

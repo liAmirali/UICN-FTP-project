@@ -2,6 +2,11 @@ import os
 
 USERS = [
     {
+        "username": "admin",
+        "password": "admin",
+        "is_privileged": True
+    },
+    {
         "username": "Amirali",
         "password": "1234",
         "is_privileged": True
