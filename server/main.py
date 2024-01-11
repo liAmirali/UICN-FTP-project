@@ -1,4 +1,5 @@
 import socket
+import ssl
 import os
 import threading
 
@@ -162,20 +163,26 @@ def handle_new_client(ctrl_s: socket.socket, client_socket: socket.socket):
 
 
 def main():
+    context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+    context.load_cert_chain('../server_cert.pem', '../server_key.pem')
+
     ctrl_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     ctrl_s.bind((INTERFACE_HOST, INTERFACE_CTRL_PORT))
     ctrl_s.listen(5)
+
+    # Wrapping our socket with SSL
+    secure_server_socket = context.wrap_socket(ctrl_s, server_side=True)
 
     print(
         f"Server is listening on http://{INTERFACE_HOST}:{INTERFACE_CTRL_PORT}")
 
     while True:
-        client_socket, client_address = ctrl_s.accept()
+        client_socket, client_address = secure_server_socket.accept()
 
         print(f"A new client is connected. Address={client_address}")
 
         new_client_thread = threading.Thread(
-            target=handle_new_client, args=(ctrl_s, client_socket))
+            target=handle_new_client, args=(secure_server_socket, client_socket))
         new_client_thread.start()
 
 

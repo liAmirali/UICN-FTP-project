@@ -1,4 +1,5 @@
 import socket
+import ssl
 import threading
 
 from package.constants import *
@@ -63,7 +64,11 @@ def authenticate_user(client_s: socket.socket):
 
 
 def main():
+    context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+    context.load_verify_locations("../server_cert.pem")
+
     client_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
 
     # server_host, server_port = input("Enter the server post and host (example: 127.0.0.1:20): ").split(":")
     server_host, server_port = DUMMY_HOST, DUMMY_CTRL_PORT
@@ -76,23 +81,26 @@ def main():
         print(f"Error: Couldn't connect to the server. {exp}")
         return
 
+    # Wrap the socket with SSL
+    secure_client_socket = context.wrap_socket(client_s, server_hostname=DUMMY_HOST)
+
     try:
-        authenticated = authenticate_user(client_s)
+        authenticated = authenticate_user(secure_client_socket)
         if not authenticated:
-            client_s.close()
+            secure_client_socket.close()
             return
     except Exception as exp:
         print("Error:", exp)
-        client_s.close()
+        secure_client_socket.close()
         return
 
     while True:
         try:
-            reply = run(client_s)
+            reply = run(secure_client_socket)
             print("Reply:", reply)
 
             if reply == "221 QUITTED":
-                client_s.close()
+                secure_client_socket.close()
                 break
 
         except Exception as exp:
