@@ -1,13 +1,15 @@
 import socket
 import ssl
+from ssl import SSLSocket
 import threading
 
 from package.constants import *
 from package.data_transfer import initiate_passive_mode, recv_file, send_file
 from package.utils import parse_cmd
+from config import SERVER_CERT
 
 
-def run(client_s: socket.socket):
+def run(client_s: SSLSocket):
     cmd = input("Enter your command: ")
 
     args = parse_cmd(cmd)
@@ -65,7 +67,7 @@ def authenticate_user(client_s: socket.socket):
 
 def main():
     context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
-    context.load_verify_locations("../server_cert.pem")
+    context.load_verify_locations(SERVER_CERT)
 
     client_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 

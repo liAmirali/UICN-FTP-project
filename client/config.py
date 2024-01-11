@@ -1,0 +1,1 @@
+SERVER_CERT = "/home/elnayu/University/5/CN/project/phase02/server_cert.pem"

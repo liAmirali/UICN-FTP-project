@@ -1,6 +1,9 @@
 import socket
+import ssl
 import re
 import os
+
+from config import SERVER_CERT
 
 
 def extract_passive_res(response):
@@ -27,6 +30,9 @@ def extract_passive_res(response):
 
 
 def recv_file(data_ip, data_port):
+    context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+    context.load_verify_locations(SERVER_CERT)
+
     print("---BEGIN RECV---")
     data_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -36,10 +42,12 @@ def recv_file(data_ip, data_port):
         print("Couldn't connect to data socket")
         return
 
-    file_name = data_sock.recv(1024).decode("utf-8")
+    secure_data_socket = context.wrap_socket(data_sock, server_hostname=data_ip)
+
+    file_name = secure_data_socket.recv(1024).decode("utf-8")
     print(f"{file_name=} RECEIVED")
 
-    file_data = data_sock.recv(1024 * 1024).decode("utf-8")
+    file_data = secure_data_socket.recv(1024 * 1024).decode("utf-8")
     print(f"{file_data=} RECEIVED")
 
     with open(file_name, "w") as file:
@@ -47,10 +55,13 @@ def recv_file(data_ip, data_port):
 
     print("---WRITE DONE---")
 
-    data_sock.close()
+    secure_data_socket.close()
 
 
 def send_file(data_ip, data_port, file_path_client, file_path_server):
+    context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+    context.load_verify_locations(SERVER_CERT)
+
     data_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     try:
@@ -58,16 +69,18 @@ def send_file(data_ip, data_port, file_path_client, file_path_server):
     except Exception as exp:
         print("Couldn't connect to data socket")
         return
+    
+    secure_data_socket = context.wrap_socket(data_sock, server_hostname=data_ip)
 
     with open(file_path_client, "r") as f:
         file_addr = file_path_server + '/' + os.path.basename(file_path_client)
         file_data = f.read()
 
-        data_sock.send(bytes(file_addr, encoding="utf-8"))
+        secure_data_socket.send(bytes(file_addr, encoding="utf-8"))
 
-        data_sock.send(bytes(file_data, encoding="utf-8"))
+        secure_data_socket.send(bytes(file_data, encoding="utf-8"))
 
-    data_sock.close()
+    secure_data_socket.close()
 
 
 def initiate_passive_mode(ctrl_conn: socket.socket):

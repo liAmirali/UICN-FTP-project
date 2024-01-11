@@ -8,6 +8,7 @@ from access_config import USERS
 from package.utils import parse_cmd, check_valid_path, is_accessible, update_history, get_history
 from package.data_transfer import create_data_conn, send_file, recv_file
 from package.FTPState import FTPState
+from config import SERVER_CERT, SERVER_KEY
 
 
 def run(cs: socket.socket, state: FTPState):
@@ -164,7 +165,7 @@ def handle_new_client(ctrl_s: socket.socket, client_socket: socket.socket):
 
 def main():
     context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-    context.load_cert_chain('../server_cert.pem', '../server_key.pem')
+    context.load_cert_chain(SERVER_CERT, SERVER_KEY)
 
     ctrl_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     ctrl_s.bind((INTERFACE_HOST, INTERFACE_CTRL_PORT))
