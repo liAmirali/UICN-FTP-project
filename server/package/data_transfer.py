@@ -5,19 +5,24 @@ import os
 from .constants import *
 from config import SERVER_CERT, SERVER_KEY
 
+data_port = INTERFACE_DATA_PORT
 
 def create_data_conn():
+    global data_port
+    data_port += 1
+    print("DATA PORT:", data_port)
+
     context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     context.load_cert_chain(SERVER_CERT, SERVER_KEY)
 
     data_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    data_sock.bind((INTERFACE_HOST, INTERFACE_DATA_PORT))
+    data_sock.bind((INTERFACE_HOST, data_port))
     data_sock.listen(1)
 
     secure_server_socket = context.wrap_socket(data_sock, server_side=True)
 
     response_message = f"""227 Entering Passive Mode ({','.join(INTERFACE_HOST.split('.'))},{
-        INTERFACE_DATA_PORT >> 8},{INTERFACE_DATA_PORT & 255})."""
+        data_port >> 8},{data_port & 255})."""
 
     return response_message, secure_server_socket
 

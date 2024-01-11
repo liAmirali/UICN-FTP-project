@@ -158,6 +158,9 @@ def handle_new_client(ctrl_s: socket.socket, client_socket: socket.socket):
                 break
         except Exception as exp:
             print("Error:", exp)
+            if ftp_state.data_sock:
+                ftp_state.data_sock.close()
+
             client_socket.sendall(bytes(str(exp), encoding="utf-8"))
         finally:
             os.chdir(old_dir)

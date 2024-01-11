@@ -40,6 +40,7 @@ def recv_file(data_ip, data_port):
         data_sock.connect((data_ip, data_port))
     except Exception as exp:
         print("Couldn't connect to data socket")
+        data_sock.close()
         return
 
     secure_data_socket = context.wrap_socket(data_sock, server_hostname=data_ip)
